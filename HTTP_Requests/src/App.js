@@ -6,23 +6,39 @@ import PeopleList from "./components/PeoplesList";
 function App() {
   const [movies, setMovies] = useState([]);
   const [people, setPeoples] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   async function fetchMoviesHandler() {
-    const response = await fetch("https://swapi.dev/api/films");
-    const data = await response.json();
+    setError(null);
+    setIsLoading(true);
+    try {
+      const response = await fetch("https://swapi.dev/api/films");
 
-    const transformedMovieList = data.results.map((movieData) => {
-      return {
-        id: movieData.episode_id,
-        title: movieData.title,
-        openingText: movieData.opening_crawl,
-        releaseData: movieData.release_data,
-      };
-    });
-    setMovies(transformedMovieList);
+      if (!response.ok) {
+        throw new Error("Something went wrong here");
+      }
+
+      const data = await response.json();
+
+      const transformedMovieList = data.results.map((movieData) => {
+        return {
+          id: movieData.episode_id,
+          title: movieData.title,
+          openingText: movieData.opening_crawl,
+          releaseData: movieData.release_data,
+        };
+      });
+      setMovies(transformedMovieList);
+      setIsLoading(false);
+    } catch (error) {
+      setError(error.message);
+    }
+    setIsLoading(false);
   }
 
   function fetchPeopleHandler() {
+    setIsLoading(true);
     fetch("https://swapi.dev/api/people/")
       .then((response) => {
         return response.json();
@@ -37,6 +53,7 @@ function App() {
           };
         });
         setPeoples(transformedPeople);
+        setIsLoading(false);
       });
   }
 
@@ -50,8 +67,12 @@ function App() {
         <button onClick={fetchPeopleHandler}>Fetch People</button>
       </section>
       <section>
-        <MoviesList movies={movies} />
-        <PeopleList people={people} />
+        {isLoading && <p>Loading...</p>}
+        {!isLoading && movies.length > 0 && <MoviesList movies={movies} />}
+        {!isLoading && people.length > 0 && <PeopleList people={people} />}
+        {!isLoading && movies.length === 0 && !error && <p>No movies found.</p>}
+        {!isLoading && people.length === 0 && !error && <p>No people found.</p>}
+        {!isLoading && error && <p>{error}</p>}
       </section>
     </React.Fragment>
   );
