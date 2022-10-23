@@ -1,6 +1,6 @@
 import MoviesList from "./components/MoviesList";
 import "./App.css";
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import PeopleList from "./components/PeoplesList";
 
 function App() {
@@ -9,7 +9,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  async function fetchMoviesHandler() {
+  const fetchMoviesHandler = useCallback(async () => {
     setError(null);
     setIsLoading(true);
     try {
@@ -36,7 +36,11 @@ function App() {
       setError(error.message);
     }
     setIsLoading(false);
-  }
+  }, []);
+
+  useEffect(() => {
+    fetchMoviesHandler();
+  }, [fetchMoviesHandler]);
 
   function fetchPeopleHandler() {
     setIsLoading(true);
