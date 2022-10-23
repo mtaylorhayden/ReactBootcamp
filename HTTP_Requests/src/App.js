@@ -30,6 +30,7 @@ function App() {
         };
       });
       setMovies(transformedMovieList);
+      setPeoples([]);
       setIsLoading(false);
     } catch (error) {
       setError(error.message);
@@ -53,12 +54,28 @@ function App() {
           };
         });
         setPeoples(transformedPeople);
+        setMovies([]);
         setIsLoading(false);
       });
   }
 
-  console.log(people);
-  console.log(movies);
+  let content = <p>No people or movies found</p>;
+
+  if (movies.length > 0) {
+    content = <MoviesList movies={movies} />;
+  }
+
+  if (people.length > 0) {
+    content = <PeopleList people={people} />;
+  }
+
+  if (error) {
+    content = <p>{error}</p>;
+  }
+
+  if (isLoading) {
+    content = <p>Loading...</p>;
+  }
 
   return (
     <React.Fragment>
@@ -66,14 +83,7 @@ function App() {
         <button onClick={fetchMoviesHandler}>Fetch Movies</button>
         <button onClick={fetchPeopleHandler}>Fetch People</button>
       </section>
-      <section>
-        {isLoading && <p>Loading...</p>}
-        {!isLoading && movies.length > 0 && <MoviesList movies={movies} />}
-        {!isLoading && people.length > 0 && <PeopleList people={people} />}
-        {!isLoading && movies.length === 0 && !error && <p>No movies found.</p>}
-        {!isLoading && people.length === 0 && !error && <p>No people found.</p>}
-        {!isLoading && error && <p>{error}</p>}
-      </section>
+      <section>{content}</section>
     </React.Fragment>
   );
 }
