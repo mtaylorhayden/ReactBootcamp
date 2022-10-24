@@ -1,37 +1,37 @@
+import React, { useState, useEffect, useCallback } from "react";
+
 import MoviesList from "./components/MoviesList";
+import AddMovie from "./components/AddMovie";
 import "./App.css";
-import React, { useCallback, useEffect, useState } from "react";
-import PeopleList from "./components/PeoplesList";
 
 function App() {
   const [movies, setMovies] = useState([]);
-  const [people, setPeoples] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const fetchMoviesHandler = useCallback(async () => {
-    setError(null);
     setIsLoading(true);
+    setError(null);
     try {
-      const response = await fetch("https://swapi.dev/api/films");
-
+      const response = await fetch("firebaseURL");
       if (!response.ok) {
-        throw new Error("Something went wrong here");
+        throw new Error("Something went wrong!");
       }
 
       const data = await response.json();
 
-      const transformedMovieList = data.results.map((movieData) => {
-        return {
-          id: movieData.episode_id,
-          title: movieData.title,
-          openingText: movieData.opening_crawl,
-          releaseData: movieData.release_data,
-        };
-      });
-      setMovies(transformedMovieList);
-      setPeoples([]);
-      setIsLoading(false);
+      const loadedMovies = [];
+
+      for (const key in data) {
+        loadedMovies.push({
+          id: key,
+          title: data[key].title,
+          openingText: data[key].openingText,
+          releaseDate: data[key].releaseDate,
+        });
+      }
+
+      setMovies(loadedMovies);
     } catch (error) {
       setError(error.message);
     }
@@ -42,35 +42,22 @@ function App() {
     fetchMoviesHandler();
   }, [fetchMoviesHandler]);
 
-  function fetchPeopleHandler() {
-    setIsLoading(true);
-    fetch("https://swapi.dev/api/people/")
-      .then((response) => {
-        return response.json();
-      })
-      .then((data) => {
-        const transformedPeople = data.results.map((peopleData) => {
-          return {
-            id: Math.random(),
-            name: peopleData.name,
-            height: peopleData.height,
-            weight: peopleData.mass,
-          };
-        });
-        setPeoples(transformedPeople);
-        setMovies([]);
-        setIsLoading(false);
-      });
+  async function addMovieHandler(movie) {
+    const response = await fetch("firebaseURL", {
+      method: "POST",
+      body: JSON.stringify(movie),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await response.json();
+    console.log(data);
   }
 
-  let content = <p>No people or movies found</p>;
+  let content = <p>Found no movies.</p>;
 
   if (movies.length > 0) {
     content = <MoviesList movies={movies} />;
-  }
-
-  if (people.length > 0) {
-    content = <PeopleList people={people} />;
   }
 
   if (error) {
@@ -84,8 +71,10 @@ function App() {
   return (
     <React.Fragment>
       <section>
+        <AddMovie onAddMovie={addMovieHandler} />
+      </section>
+      <section>
         <button onClick={fetchMoviesHandler}>Fetch Movies</button>
-        <button onClick={fetchPeopleHandler}>Fetch People</button>
       </section>
       <section>{content}</section>
     </React.Fragment>
